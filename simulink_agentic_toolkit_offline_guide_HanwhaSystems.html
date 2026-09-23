@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MATLAB/Simulink Agentic Toolkit 폐쇄망 설치 및 검증 가이드</title>
+  <style>
+    :root {
+      --ink: #17252b;
+      --muted: #607273;
+      --paper: #fff7e7;
+      --cream: #f8edda;
+      --navy: #102f3c;
+      --teal: #0c766f;
+      --leaf: #5aa17f;
+      --amber: #d78c28;
+      --rust: #ba533c;
+      --line: rgba(23, 37, 43, .14);
+      --shadow: 0 24px 72px rgba(23, 37, 43, .16);
+      --mono: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+      --sans: "Pretendard", "SUIT", "Noto Sans KR", "Malgun Gothic", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      color: var(--ink);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(90, 161, 127, .48), transparent 34rem),
+        radial-gradient(circle at 88% 6%, rgba(215, 140, 40, .26), transparent 26rem),
+        linear-gradient(135deg, #fbefd8, #edf5e8 52%, #f9e9d5);
+      min-height: 100vh;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(23, 37, 43, .04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(23, 37, 43, .04) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.75), transparent 74%);
+      pointer-events: none;
+    }
+    code { font-family: var(--mono); overflow-wrap: anywhere; word-break: break-word; }
+    .wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+    .glass {
+      border: 1px solid var(--line);
+      background: rgba(255, 247, 231, .78);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 24px;
+      padding: 48px 0 22px;
+    }
+    .hero-main {
+      position: relative;
+      overflow: hidden;
+      border-radius: 34px;
+      padding: 42px;
+    }
+    .hero-main::after {
+      content: "";
+      position: absolute;
+      right: -105px;
+      top: -125px;
+      width: 340px;
+      height: 340px;
+      border-radius: 42%;
+      background: conic-gradient(from 140deg, rgba(12,118,111,.28), rgba(215,140,40,.34), transparent, rgba(16,47,60,.2));
+      animation: float 12s ease-in-out infinite alternate;
+    }
+    @keyframes float {
+      from { transform: rotate(-8deg) translateY(0); }
+      to { transform: rotate(16deg) translateY(28px); }
+    }
+    .eyebrow {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: var(--navy);
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--teal);
+      box-shadow: 0 0 0 8px rgba(12,118,111,.14);
+    }
+    h1 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(32px, 4.4vw, 54px);
+      line-height: 1.14;
+      letter-spacing: -.055em;
+    }
+    .title-line { display: block; }
+    .lead {
+      position: relative;
+      z-index: 1;
+      margin: 22px 0 0;
+      max-width: 790px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.75;
+    }
+    .chips { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.42);
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
+    .status-card {
+      border-radius: 34px;
+      padding: 24px;
+      display: grid;
+      align-content: space-between;
+      gap: 18px;
+    }
+    .ring {
+      --p: 0deg;
+      width: 166px;
+      height: 166px;
+      display: grid;
+      place-items: center;
+      margin: 2px auto 10px;
+      border-radius: 50%;
+      background: conic-gradient(var(--teal) var(--p), rgba(23,37,43,.1) 0deg);
+    }
+    .ring > div {
+      width: 122px;
+      height: 122px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border-radius: 50%;
+      background: var(--paper);
+    }
+    .ring strong { display: block; font-size: 34px; letter-spacing: -.04em; }
+    .ring span { display: block; color: var(--muted); font-size: 12px; font-weight: 900; }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 15px;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      color: var(--paper);
+      background: var(--navy);
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(23,37,43,.16); }
+    button.secondary { color: var(--navy); background: rgba(23,37,43,.08); }
+    button.light { color: var(--navy); border: 1px solid var(--line); background: rgba(255,255,255,.42); }
+    button.active { color: var(--paper); background: var(--teal); }
+    .layout {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: 24px;
+      padding: 16px 0 64px;
+    }
+    nav {
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      border-radius: 24px;
+      padding: 14px;
+      background: rgba(16,47,60,.92);
+      box-shadow: var(--shadow);
+    }
+    nav a {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 2px 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+      color: rgba(255,247,231,.76);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+    }
+    nav a.active, nav a:hover { color: var(--paper); background: rgba(255,255,255,.12); }
+    nav span {
+      min-width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255,255,255,.12);
+      color: #8bc5a7;
+      font-size: 12px;
+    }
+    .content { display: grid; gap: 22px; }
+    section { scroll-margin-top: 24px; }
+    .panel { border-radius: 30px; padding: 28px; }
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+    h2 { margin: 0; font-size: clamp(25px, 3vw, 40px); letter-spacing: -.055em; }
+    h3 { margin: 0 0 9px; font-size: 19px; letter-spacing: -.03em; }
+    .head p, .soft {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    .head p { max-width: 560px; text-align: right; }
+    .head p.no-wrap { max-width: none; white-space: nowrap; flex-shrink: 0; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .files-grid { display: grid; grid-template-columns: repeat(2, minmax(290px, 1fr)); gap: 10px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 19px;
+      background: rgba(255,247,231,.72);
+      box-shadow: 0 16px 42px rgba(23,37,43,.08);
+    }
+    .card::before {
+      content: attr(data-kicker);
+      display: inline-flex;
+      margin-bottom: 13px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(12,118,111,.11);
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .04em;
+    }
+    .card p { margin: 0; color: var(--muted); line-height: 1.65; word-break: keep-all; overflow-wrap: break-word; }
+    .field { display: grid; gap: 8px; }
+    label { font-size: 13px; font-weight: 950; color: var(--navy); }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 13px 14px;
+      color: var(--ink);
+      background: rgba(255,255,255,.56);
+      font: inherit;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: rgba(12,118,111,.56); box-shadow: 0 0 0 4px rgba(12,118,111,.1); }
+    .choices { display: flex; flex-wrap: wrap; gap: 9px; }
+    .check {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 12px;
+      align-items: start;
+      min-height: 124px;
+      cursor: pointer;
+    }
+    .asset-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-height: 0;
+      padding: 14px 15px;
+      border-radius: 18px;
+    }
+    .asset-check::before { display: none; }
+    .asset-check > span { display: grid; gap: 6px; min-width: 0; }
+    .asset-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .asset-title strong { font-size: 14px; line-height: 1.25; overflow-wrap: anywhere; }
+    .asset-badge {
+      flex: 0 0 auto;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(12,118,111,.12);
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .03em;
+    }
+    input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--teal); margin-top: 2px; }
+    .check small { display: block; margin-top: 7px; color: var(--muted); line-height: 1.55; }
+    .asset-check small { margin-top: 0; font-size: 12px; line-height: 1.45; }
+    .asset-check code { overflow-wrap: anywhere; font-size: 12px; }
+    .code {
+      overflow: hidden;
+      border: 1px solid rgba(23,37,43,.18);
+      border-radius: 20px;
+      background: #0e1e25;
+      box-shadow: 0 18px 44px rgba(23,37,43,.18);
+    }
+    .code-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px 11px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      color: rgba(255,247,231,.84);
+      font-size: 13px;
+      font-weight: 950;
+    }
+    .copy { padding: 8px 11px; color: var(--ink); background: #e8c16d; font-size: 12px; }
+    pre {
+      margin: 0;
+      padding: 18px;
+      color: #eaf6ed;
+      overflow: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .note {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px 20px;
+      background: rgba(12,118,111,.09);
+      line-height: 1.7;
+    }
+    .note a { color: var(--teal); font-weight: 950; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+    .download-app-box { padding: 28px; display: grid; gap: 10px; background: rgba(255,247,231,.72); }
+    .download-app-box strong { color: var(--navy); font-size: clamp(22px, 2.5vw, 34px); letter-spacing: -.04em; line-height: 1.18; }
+    .download-app-box a { font-size: 15px; }
+    .rows { display: grid; gap: 12px; }
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.44);
+    }
+    .status { display: flex; gap: 7px; flex-wrap: wrap; }
+    .status button { min-width: 58px; padding: 8px 10px; color: var(--navy); border: 1px solid var(--line); background: rgba(255,255,255,.58); font-size: 12px; }
+    .status button.pass.on { color: white; background: var(--leaf); }
+    .status button.fail.on { color: white; background: var(--rust); }
+    details.card summary { cursor: pointer; font-weight: 950; }
+    details.card p { margin-top: 10px; overflow-wrap: anywhere; }
+    .tag { display: inline-flex; margin-left: 8px; padding: 4px 8px; border-radius: 999px; background: rgba(215,140,40,.18); color: var(--navy); font-size: 11px; font-weight: 950; }
+    .report { min-height: 230px; font-family: var(--mono); font-size: 13px; }
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 20;
+      padding: 13px 16px;
+      border-radius: 999px;
+      color: var(--paper);
+      background: var(--navy);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: .18s ease;
+      pointer-events: none;
+      font-weight: 900;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .reveal { opacity: 0; transform: translateY(16px); animation: reveal .58s ease forwards; }
+    @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+    footer { padding: 24px 0 42px; color: var(--muted); text-align: center; }
+    @media (max-width: 940px) {
+      .hero, .layout, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .files-grid { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
+      nav { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .head { align-items: start; flex-direction: column; }
+      .head p { text-align: left; }
+    }
+    @media (max-width: 620px) {
+      .wrap { width: min(100% - 18px, 1180px); }
+      .hero-main, .panel { padding: 22px; }
+      h1 { font-size: clamp(29px, 9vw, 40px); line-height: 1.18; }
+      nav, .row, .files-grid { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: white; }
+      body::before, nav, .status-card, .copy, .toast { display: none !important; }
+      .hero, .layout, .grid-2, .grid-3, .files-grid { display: block; }
+      .glass, .card, .note { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="wrap hero">
+    <div class="hero-main glass reveal">
+      <div class="eyebrow"><span class="dot"></span>Air-Gapped Installation Guide</div>
+      <h1><span class="title-line">폐쇄망 MATLAB/Simulink Agentic Toolkit</span><span class="title-line">설치 및 검증 가이드</span></h1>
+      <p class="lead">외부망에서 App으로 설치 자산을 다운로드하고, 폐쇄망 PC에서 로컬 파일만으로 MATLAB/Simulink Agentic Toolkit과 MATLAB MCP 연결을 설치 및 검증하는 가이드입니다.</p>
+      <div class="chips">
+        <span class="chip">완전 오프라인 HTML</span>
+        <span class="chip">다운로드 App 반영</span>
+        <span class="chip">오프라인 설치 App 반영</span>
+        <span class="chip">체크리스트 저장</span>
+      </div>
+    </div>
+    <aside class="status-card glass reveal">
+      <div>
+        <div class="ring" id="ring"><div><strong id="pct">0%</strong><span>완료율</span></div></div>
+        <p class="soft" style="text-align:center">체크 상태는 브라우저 localStorage에 저장됩니다.</p>
+      </div>
+      <div class="rows">
+        <button id="reportTop">리포트 생성</button>
+        <button class="secondary" onclick="window.print()">인쇄 / PDF</button>
+        <button class="light" id="reset">상태 초기화</button>
+      </div>
+    </aside>
+  </header>
+
+  <main class="wrap layout">
+    <nav>      <a href="#flow" class="active"><span>1</span>전체 흐름</a>
+      <a href="#env"><span>2</span>환경 선택</a>
+      <a href="#files"><span>3</span>다운로드/반입</a>
+      <a href="#install"><span>4</span>자동 설치</a>
+      <a href="#agent-setup"><span>5</span>AI Agent 설정</a>
+      <a href="#verify"><span>6</span>검증</a>
+      <a href="#trouble"><span>7</span>문제 해결</a>
+      <a href="#report"><span>8</span>리포트</a>
+    </nav>
+
+    <div class="content">
+      <div class="note download-app-box reveal">
+        <strong>Agentic Toolkit 설치 자동화 App 다운로드</strong>
+        <a href="https://mathworks.highspot.com/items/6a8ea00134df5ab0ef852764?lfrm=shp.0" target="_blank" rel="noopener noreferrer">MATLAB/Simulink Agentic Toolkit 다운로드 및 설치 자동화를 위한 App</a>
+      </div>
+      <section id="flow" class="panel glass reveal">
+        <div class="head">
+          <h2>전체 흐름</h2>
+          <p>외부망 PC에서 다운로드 App으로 자산을 수집하고 폐쇄망 PC로 반입한 뒤, Installer App으로 <code>Offline=true</code> 설치를 실행합니다.</p>
+        </div>
+        <div class="grid-3">
+          <article class="card" data-kicker="Prepare"><h3>1. 외부망에서 자동 수집</h3><p><code>AgenticToolkitFilesDownloaderApp</code>을 실행해 installer add-on, MCP server binary, MCP toolbox, MATLAB/Simulink Toolkit ZIP을 <code>D:\agentic-offline</code>에 다운로드하고 압축을 풉니다.</p></article>
+          <article class="card" data-kicker="Transfer"><h3>2. 폐쇄망으로 반입</h3><p>다운로드 결과 폴더와 <code>AgenticToolkitOfflineInstallerApp.m</code>을 함께 반입하고 SHA-256 해시와 승인 기록을 보관합니다.</p></article>
+          <article class="card" data-kicker="Validate"><h3>3. App에서 설치 및 검증</h3><p>Installer App에서 <strong>Validate Files</strong>, <strong>Install Offline</strong>, <strong>Install Skills</strong>, <strong>Status / Initialize</strong> 순서로 확인합니다.</p></article>
+        </div>
+      </section>
+
+      <section id="env" class="panel glass reveal">
+        <div class="head">
+          <h2>환경 선택</h2>
+          <p class="no-wrap">OS와 에이전트를 선택하면 참고용 수동 설치 명령과 binary 이름이 자동으로 바뀝니다.</p>
+        </div>
+        <div class="rows">
+          <div class="field">
+            <label>대상 OS</label>
+            <div class="choices" id="osChoices">
+              <button class="light active" data-os="windows">Windows</button>
+              <button class="light" data-os="linux">Linux</button>
+              <button class="light" data-os="mac-arm">macOS arm64</button>
+              <button class="light" data-os="mac-x64">macOS x64</button>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="agent">에이전트</label>
+              <select id="agent" disabled>
+                <option value="roo">Roo Code (설정 예시)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="root">반입 루트 폴더</label>
+              <input id="root" value="D:\agentic-offline" spellcheck="false">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="files" class="panel glass reveal">
+        <div class="head">
+          <h2>다운로드 및 반입 파일</h2>
+          <p>외부망 PC에서 다운로드 App을 실행해 아래 자산을 한 폴더에 준비합니다.</p>
+        </div>
+        <div class="note">
+          <strong>외부망 다운로드 App:</strong> MATLAB에서 <code>AgenticToolkitFilesDownloaderApp.m</code>이 있는 폴더를 path에 추가하고 App을 실행한 뒤, Download Folder를 선택하고 <strong>Download and Extract</strong>를 누릅니다. 현재 App은 Windows용 MCP binary를 다운로드하도록 작성되어 있습니다.
+        </div>
+        <div class="code" style="margin-top:16px">
+          <div class="code-head"><span>외부망 PC: 다운로드 App 실행</span><button class="copy" data-copy="downloaderCode">복사</button></div>
+          <pre id="downloaderCode"></pre>
+        </div>
+        <div class="files-grid" style="margin-top:16px">
+          <label class="card check asset-check" data-kicker="Required"><input type="checkbox" data-check="appFiles"><span><span class="asset-title"><strong>App 파일 2개</strong><span class="asset-badge">Required</span></span><small><code>AgenticToolkitFilesDownloaderApp.m</code>, <code>AgenticToolkitOfflineInstallerApp.m</code>을 운영 PC에서 실행 가능해야 합니다.</small></span></label>
+          <label class="card check asset-check" data-kicker="Required"><input type="checkbox" data-check="installer"><span><span class="asset-title"><strong>agenticToolkitInstaller.mltbx</strong><span class="asset-badge">Required</span></span><small><code>setupAgenticToolkit</code> 함수를 제공하는 installer add-on입니다.</small></span></label>
+          <label class="card check asset-check" data-kicker="Required"><input type="checkbox" data-check="binary"><span><span class="asset-title"><strong>MATLAB MCP Server binary</strong><span class="asset-badge">Required</span></span><small>선택한 OS 기준 파일명: <code id="binaryName">matlab-mcp-server-windows-x64.exe</code></small></span></label>
+          <label class="card check asset-check" data-kicker="Required"><input type="checkbox" data-check="toolbox"><span><span class="asset-title"><strong>MATLABMCPServerToolbox.mltbx</strong><span class="asset-badge">Required</span></span><small>MATLAB session 공유와 MCP server 연결에 필요한 toolbox입니다.</small></span></label>
+          <label class="card check asset-check" data-kicker="Required"><input type="checkbox" data-check="simulinkRepo"><span><span class="asset-title"><strong>simulink-agentic-toolkit-main 폴더</strong><span class="asset-badge">Required</span></span><small>다운로드 App이 <code>simulink-agentic-toolkit-main.zip</code>을 해제해 만드는 소스 폴더입니다.</small></span></label>
+          <label class="card check asset-check" data-kicker="Optional"><input type="checkbox" data-check="matlabRepo"><span><span class="asset-title"><strong>matlab-agentic-toolkit-main 폴더</strong><span class="asset-badge">Optional</span></span><small>MATLAB Toolkit도 함께 설치할 때 필요한 소스 폴더입니다. Installer App 기본 선택은 MATLAB and Simulink입니다.</small></span></label>
+          <label class="card check asset-check" data-kicker="Audit"><input type="checkbox" data-check="hash"><span><span class="asset-title"><strong>해시 및 반입 승인 기록</strong><span class="asset-badge">Audit</span></span><small>반입 전후 SHA-256 결과와 승인 기록을 설치 로그와 함께 보관합니다.</small></span></label>
+        </div>
+        <div class="code" style="margin-top:16px">
+          <div class="code-head"><span>권장 폴더 구조: 다운로드 결과 폴더를 그대로 반입</span><button class="copy" data-copy="tree">복사</button></div>
+          <pre id="tree"></pre>
+        </div>
+      </section>
+      <section id="install" class="panel glass reveal">
+        <div class="head">
+          <h2>자동 설치</h2>
+          <p>폐쇄망 PC에서 Installer App을 실행해 파일 검증, 오프라인 설치, 스킬 설치, 초기화를 순서대로 수행합니다.</p>
+        </div>
+        <div class="rows" style="margin-bottom:16px">
+          <label class="row"><span><input type="checkbox" data-check="matlabReady"> MATLAB R2023a 이상과 Simulink 라이선스를 확인했습니다.</span></label>
+          <label class="row"><span><input type="checkbox" data-check="pathReady"> 반입 폴더가 Installer App의 Offline Package Folder 값과 일치합니다.</span></label>
+        </div>
+        <div class="code">
+          <div class="code-head"><span>폐쇄망 PC: Installer App 실행</span><button class="copy" data-copy="offlineInstallerCode">복사</button></div>
+          <pre id="offlineInstallerCode"></pre>
+        </div>
+        <div class="grid-3" style="margin-top:16px">
+          <article class="card" data-kicker="Validate"><h3>1. Validate Files</h3><p>Offline Package Folder에 <code>agenticToolkitInstaller.mltbx</code>, MCP server, MCP toolbox, 선택한 Toolkit 소스 폴더가 있는지 확인합니다.</p></article>
+          <article class="card" data-kicker="Install"><h3>2. Install Offline</h3><p>Toolkit 선택값에 따라 <code>setupAgenticToolkit("install", Offline=true, Prompt=false)</code>를 실행합니다. 기본 선택은 MATLAB and Simulink입니다.</p></article>
+          <article class="card" data-kicker="Skills"><h3>3. Install Skills</h3><p>필요한 MATLAB/Simulink Skill Group을 선택하고 <code>%USERPROFILE%\.agents\skills</code>에 스킬 링크를 생성합니다. 마지막에 <strong>Status / Initialize</strong>를 실행합니다.</p></article>
+        </div>
+        <div class="note" style="margin-top:16px"><strong>수동 대체 절차:</strong> App을 사용할 수 없을 때만 아래 명령을 MATLAB Command Window에서 실행합니다.</div>
+        <div class="code" style="margin-top:16px">
+          <div class="code-head"><span>수동 1. installer add-on 설치</span><button class="copy" data-copy="installerCode">복사</button></div>
+          <pre id="installerCode"></pre>
+        </div>
+        <div class="code" style="margin-top:16px">
+          <div class="code-head"><span>수동 2. 로컬 파일로 Toolkit 설치</span><button class="copy" data-copy="installCode">복사</button></div>
+          <pre id="installCode"></pre>
+        </div>
+        <div class="note" style="margin-top:16px"><strong>스킬 설치:</strong> Installer App의 <strong>Install Skills</strong>는 선택한 skill group의 각 skill 폴더를 <code>%USERPROFILE%\.agents\skills</code> 아래에 링크합니다. 이미 같은 이름의 폴더나 링크가 있으면 App 로그에 표시하고 건너뜁니다.</div>
+      </section>
+
+      <section id="agent-setup" class="panel glass reveal">
+        <div class="head">
+          <h2>AI Agent 설정</h2>
+          <p>이 섹션은 Roo Code를 예시 Agent로 사용하여 설명합니다. 동일한 개념은 Codex, Copilot, Claude Code 등 다른 MCP 지원 Agent에도 적용할 수 있습니다.</p>
+        </div>
+        <div class="note">
+          <strong>예시 구성 개념:</strong> Roo Code는 예시 Agent이며 LLM 자체가 아닙니다. 개인 PC의 Roo Code가 사내 API endpoint를 통해 Gemma 또는 Qwen 계열 내부 LLM에 요청을 보내고, 별도의 MCP 연결을 통해 로컬 MATLAB/Simulink 작업을 실행합니다. 외부 인터넷은 필요하지 않지만 개인 PC에서 내부 LLM endpoint로의 사내망 통신은 허용되어야 합니다.
+        </div>
+        <div class="note" style="margin-top:16px"><strong>중요:</strong> Roo Code는 본 문서의 설명을 위한 예시 Agent입니다. 고객 환경에서는 Codex, GitHub Copilot, Claude Code, Gemini CLI 또는 MCP를 지원하는 다른 Agent를 사용할 수 있습니다. 핵심 원리는 "Agent → 내부 LLM → MATLAB MCP Server → MATLAB/Simulink" 연결 구조입니다.</div><div class="grid-3" style="margin-top:16px">
+          <article class="card" data-kicker="Reasoning"><h3>1. 내부 LLM</h3><p>Gemma4 31B, Qwen3.6 등 사내 모델을 OpenAI-compatible API 또는 Roo Code가 지원하는 provider 방식으로 제공합니다.</p></article>
+          <article class="card" data-kicker="Agent"><h3>2. Roo Code</h3><p>사용자 목표를 해석하고 작업 순서를 계획합니다. Base URL, API Key, Model ID는 고객의 내부 LLM gateway 값으로 설정합니다.</p></article>
+          <article class="card" data-kicker="Tools"><h3>3. MATLAB MCP</h3><p>Roo Code의 tool call을 MATLAB session에 전달합니다. Simulink extension file을 함께 지정해야 Simulink 전용 tool이 노출됩니다.</p></article>
+        </div>
+        <div class="code" style="margin-top:16px">
+          <div class="code-head"><span>폐쇄망 Agentic AI 연결 구조</span><button class="copy" data-copy="rooArchitecture">복사</button></div>
+          <pre id="rooArchitecture">개인 PC의 VS Code + Roo Code
+        │
+        ├── HTTPS/REST ──&gt; 사내 LLM API Gateway
+        │                  └── Gemma4 31B / Qwen3.6
+        │
+        └── local MCP ──&gt; MATLAB MCP Server
+                           └── MATLAB + Simulink Agentic Toolkit</pre>
+        </div>
+        <h3>내부 LLM provider 설정 예시</h3>
+        <p class="soft">다음 값은 개념 예시입니다. 실제 메뉴 이름과 지원 provider는 설치된 Roo Code 버전에 따라 다를 수 있습니다.</p>
+        <div class="code" style="margin-top:12px">
+          <div class="code-head"><span>예시: Roo Code의 내부 LLM 연결 값</span><button class="copy" data-copy="rooProviderCode">복사</button></div>
+          <pre id="rooProviderCode">Provider: OpenAI Compatible
+Base URL: https://&lt;internal-llm-host&gt;/v1
+API Key: &lt;issued-internal-api-key&gt;
+Model ID: &lt;exact-model-id-from-gateway&gt;
+
+예시 모델 이름:
+- gemma4-31b
+- qwen3.6-35b-a3b
+
+주의: 실제 Model ID와 Endpoint는 내부 LLM 운영팀이 제공한 값을 사용합니다.</pre>
+        </div>
+        <h3>예시 Agent(Roo Code) MCP 설정 예시</h3>
+        <p class="soft">아래 JSON은 Roo Code를 사용할 경우의 예시이며, 다른 Agent에서는 설정 형식이 달라질 수 있습니다. 실제 설정 파일 위치와 JSON schema는 사용 중인 Roo Code 버전에서 확인하십시오.</p>
+        <div class="code" style="margin-top:12px">
+          <div class="code-head"><span>MATLAB MCP Server 등록</span><button class="copy" data-copy="rooMcpCode">복사</button></div>
+          <pre id="rooMcpCode"></pre>
+        </div>
+        <div class="note" style="margin-top:16px">
+          <strong>&lt;user&gt; 값:</strong> MCP 설정 JSON의 <code>&lt;user&gt;</code>는 사용자 PC의 계정 이름 또는 실제 설치 경로에 맞게 변경해야 합니다.<br>
+          <strong>두 연결을 구분하십시오.</strong><br>
+          ① Roo Code → 내부 LLM API: 추론과 계획을 위한 연결입니다.<br>
+          ② Roo Code → MATLAB MCP Server: MATLAB/Simulink 실행을 위한 로컬 도구 연결입니다.<br>
+          API Key는 LLM gateway 인증에 사용되며 MATLAB MCP Server 실행 경로를 대신하지 않습니다.
+        </div>
+
+      </section>
+      <section id="verify" class="panel glass reveal">
+        <div class="head">
+          <h2>검증 절차</h2>
+          <p>설치 직후 Installer App의 <strong>Status / Initialize</strong>를 실행하고, 새 MATLAB 세션에서도 초기화 상태를 확인합니다.</p>
+        </div>
+        <div class="code">
+          <div class="code-head"><span>MATLAB 초기화 및 설치 검증</span><button class="copy" data-copy="verifyCode">복사</button></div>
+          <pre id="verifyCode"></pre>
+        </div>
+        <div class="code" style="margin-top:16px">
+          <div class="code-head"><span>에이전트 검증 프롬프트</span><button class="copy" data-copy="promptCode">복사</button></div>
+          <pre id="promptCode"></pre>
+        </div>
+        <div class="rows" style="margin-top:16px" id="validations">
+          <div class="row" data-val="matlab"><div><strong>MATLAB 및 Simulink 실행 확인</strong><div class="soft">대상 릴리스와 라이선스 상태를 확인합니다.</div></div><div class="status"><button data-status="none">대기</button><button class="pass" data-status="pass">통과</button><button class="fail" data-status="fail">실패</button></div></div>
+          <div class="row" data-val="installerApp"><div><strong>Installer App 로그 확인</strong><div class="soft"><strong>Install Offline</strong>, <strong>Install Skills</strong>, <strong>Status / Initialize</strong> 단계가 오류 없이 완료되어야 합니다.</div></div><div class="status"><button data-status="none">대기</button><button class="pass" data-status="pass">통과</button><button class="fail" data-status="fail">실패</button></div></div>
+          <div class="row" data-val="status"><div><strong><code>setupAgenticToolkit("status")</code> 확인</strong><div class="soft">설치된 toolkit, MCP server, 에이전트 설정 상태를 확인합니다.</div></div><div class="status"><button data-status="none">대기</button><button class="pass" data-status="pass">통과</button><button class="fail" data-status="fail">실패</button></div></div>
+          <div class="row" data-val="init"><div><strong><code>stak_initialize</code> / <code>satk_initialize</code> 실행</strong><div class="soft">Path 설정, <code>shareMATLABSession</code>, <code>validate_installation</code> 호출을 확인합니다.</div></div><div class="status"><button data-status="none">대기</button><button class="pass" data-status="pass">통과</button><button class="fail" data-status="fail">실패</button></div></div>
+          <div class="row" data-val="model"><div><strong>예제 모델 열기</strong><div class="soft"><code>openExample('simulink_general/sldemo_househeatExample')</code>로 모델 로딩을 확인합니다.</div></div><div class="status"><button data-status="none">대기</button><button class="pass" data-status="pass">통과</button><button class="fail" data-status="fail">실패</button></div></div>
+          <div class="row" data-val="agent"><div><strong>에이전트가 Simulink 모델을 설명</strong><div class="soft">Simulink skill과 MCP tool call이 모두 동작해야 합니다.</div></div><div class="status"><button data-status="none">대기</button><button class="pass" data-status="pass">통과</button><button class="fail" data-status="fail">실패</button></div></div>
+        </div>
+      </section>
+
+      <section id="trouble" class="panel glass reveal">
+        <div class="head">
+          <h2>문제 해결</h2>
+          <p>증상별로 원인을 좁혀 확인합니다.</p>
+        </div>
+        <div class="grid-2">
+          <details class="card" data-kicker="Roo Code" open><summary>내부 LLM에 연결되지 않음 <span class="tag">LLM API</span></summary><p>Base URL, 정확한 Model ID, API Key, 내부 DNS, 방화벽 포트, TLS 인증서 신뢰 여부를 확인합니다. 브라우저 접속 가능 여부만으로 API 호출 성공을 판단하지 않습니다.</p></details>
+          <details class="card" data-kicker="Roo Code"><summary>대화는 되지만 MATLAB tool이 보이지 않음 <span class="tag">MCP</span></summary><p>LLM 연결과 MCP 연결은 별개입니다. Roo Code MCP 설정의 binary 경로와 <code>--extension-file</code> 경로를 확인하고, MATLAB에서 <code>satk_initialize</code>를 실행한 뒤 Roo Code 세션을 다시 시작합니다.</p></details>
+          <details class="card" data-kicker="Download"><summary>다운로드 App에서 일부 파일 실패 <span class="tag">network</span></summary><p>외부망 PC에서 GitHub release와 archive URL 접근, 프록시, TLS 인증서, 방화벽 정책을 확인합니다. 실패한 항목은 App 로그의 파일명과 URL 기준으로 재시도하고, 완료 후 ZIP 압축 해제 폴더가 생성됐는지 확인합니다.</p></details>
+          <details class="card" data-kicker="Validate"><summary>Installer App의 Validate Files 실패 <span class="tag">files</span></summary><p>반입 폴더 바로 아래에 <code>agenticToolkitInstaller.mltbx</code>, <code>MATLABMCPServerToolbox.mltbx</code>, <code>matlab-mcp-server-windows-x64.exe</code>, <code>simulink-agentic-toolkit-main</code>, 선택 시 <code>matlab-agentic-toolkit-main</code>이 있는지 확인합니다.</p></details>
+          <details class="card" data-kicker="Install" open><summary>Add-On Manager가 열리지 않음 <span class="tag">install</span></summary><p>GUI 대신 MATLAB Command Window에서 installer add-on 설치 명령을 실행합니다. 예: <code>matlab.addons.toolbox.installToolbox("agenticToolkitInstaller.mltbx")</code></p></details>
+          <details class="card" data-kicker="MATLAB"><summary><code>satk_initialize</code>를 찾지 못함 <span class="tag">path</span></summary><p>현재 MATLAB 세션에 toolkit 루트가 path로 추가되지 않은 상태입니다. 설치 후 <code>addpath(...)</code>를 다시 실행합니다.</p></details>
+          <details class="card" data-kicker="Agent"><summary>에이전트가 Simulink 스킬을 보지 못함 <span class="tag">skill</span></summary><p><code>setupAgenticToolkit("configure")</code>를 재실행하고 에이전트 세션을 재시작합니다. Codex, Gemini, Copilot은 일반적으로 <code>~/.agents/skills/</code> 링크를 사용합니다.</p></details>
+          <details class="card" data-kicker="Windows"><summary>Codex on Windows에서 Simulink가 실패함 <span class="tag">WINDIR</span></summary><p><code>~/.codex/config.toml</code>의 <code>[mcp_servers.matlab]</code>에 <code>env_vars = ['WINDIR']</code>를 추가합니다.</p></details>
+          <details class="card" data-kicker="Timeout"><summary>Codex tool call timeout <span class="tag">timeout</span></summary><p>MATLAB 초기화, 모델 컴파일, 시뮬레이션은 오래 걸릴 수 있습니다. <code>tool_timeout_sec = 600</code> 이상으로 조정합니다.</p></details>
+          <details class="card" data-kicker="License"><summary><code>model_test</code>만 실패함 <span class="tag">Simulink Test</span></summary><p><code>model_test</code>는 Simulink Test가 필요합니다. 해당 제품이 없으면 다른 MCP 도구 중심으로 검증 범위를 조정합니다.</p></details>
+        </div>
+      </section>
+
+      <section id="report" class="panel glass reveal">
+        <div class="head">
+          <h2>검증 리포트</h2>
+          <p>현재 선택값과 체크/검증 상태를 텍스트 리포트로 남깁니다.</p>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label for="operator">작업자 / 시스템</label><input id="operator" placeholder="예: offline-lab-pc-03 / 홍길동"></div>
+          <div class="field"><label for="memo">특이사항</label><input id="memo" placeholder="예: Simulink Test 미설치로 model_test 제외"></div>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <label for="reportText">리포트</label>
+          <textarea id="reportText" class="report" spellcheck="false"></textarea>
+        </div>
+        <div class="choices" style="margin-top:12px">
+          <button id="makeReport">리포트 생성</button>
+          <button class="secondary" id="copyReport">리포트 복사</button>
+          <button class="light" id="clearReport">비우기</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="wrap">이 문서는 외부 리소스 없이 동작합니다. 다운로드/설치 App 로그, 반입 자산 해시, 실제 Agent 설정 schema는 반입한 각 제품의 고정 버전 문서 기준으로 최종 확인하십시오.</footer>
+  <div class="toast" id="toast">복사했습니다.</div>
+
+  <script>
+    const key = "satk-offline-install-guide-v3";
+    const meta = {
+      windows: { label: "Windows", root: "D:\\agentic-offline", sep: "\\", binary: "matlab-mcp-server-windows-x64.exe", home: 'getenv("USERPROFILE")', hash: "Get-FileHash D:\\agentic-offline\\matlab-mcp-server-windows-x64.exe -Algorithm SHA256" },
+      linux: { label: "Linux", root: "/mnt/agentic-offline", sep: "/", binary: "matlab-mcp-server-linux-x64", home: 'getenv("HOME")', hash: "sha256sum /mnt/agentic-offline/matlab-mcp-server-linux-x64" },
+      "mac-arm": { label: "macOS arm64", root: "/Volumes/agentic-offline", sep: "/", binary: "matlab-mcp-server-macos-arm64", home: 'getenv("HOME")', hash: "shasum -a 256 /Volumes/agentic-offline/matlab-mcp-server-macos-arm64" },
+      "mac-x64": { label: "macOS x64", root: "/Volumes/agentic-offline", sep: "/", binary: "matlab-mcp-server-macos-x64", home: 'getenv("HOME")', hash: "shasum -a 256 /Volumes/agentic-offline/matlab-mcp-server-macos-x64" }
+    };
+    const initial = { os: "windows", agent: "roo", root: "D:\\agentic-offline", operator: "", memo: "", checks: {}, vals: {} };
+    let state = load();
+
+    function load() {
+      try { return { ...initial, ...(JSON.parse(localStorage.getItem(key)) || {}) }; }
+      catch { return { ...initial }; }
+    }
+    function save() { localStorage.setItem(key, JSON.stringify(state)); progress(); }
+    function id(x) { return document.getElementById(x); }
+    function pathJoin(...parts) {
+      const sep = meta[state.os].sep;
+      return parts.filter(Boolean).map((part, index) => {
+        let s = String(part);
+        if (index > 0) s = s.replace(/^[/\\]+/, "");
+        if (index < parts.length - 1) s = s.replace(/[/\\]+$/, "");
+        return s;
+      }).join(sep);
+    }
+    function render() {
+      document.querySelectorAll("#osChoices button").forEach(b => b.classList.toggle("active", b.dataset.os === state.os));
+      state.agent = "roo";
+      id("agent").value = "roo";
+      id("root").value = state.root;
+      id("operator").value = state.operator || "";
+      id("memo").value = state.memo || "";
+      id("binaryName").textContent = meta[state.os].binary;
+
+      const root = state.root;
+      const installer = pathJoin(root, "agenticToolkitInstaller.mltbx");
+      const toolbox = pathJoin(root, "MATLABMCPServerToolbox.mltbx");
+      const binary = pathJoin(root, meta[state.os].binary);
+      const simRepo = pathJoin(root, "simulink-agentic-toolkit-main");
+      const matRepo = pathJoin(root, "matlab-agentic-toolkit-main");
+
+      id("downloaderCode").textContent = `AgenticToolkitFilesDownloaderApp`;
+      id("offlineInstallerCode").textContent = `AgenticToolkitOfflineInstallerApp`;
+      id("tree").textContent = `${root}
+${pathJoin(root, meta[state.os].binary)}
+${pathJoin(root, "agenticToolkitInstaller.mltbx")}
+${pathJoin(root, "MATLABMCPServerToolbox.mltbx")}
+${pathJoin(root, "simulink-agentic-toolkit-main", "README.md")}
+${pathJoin(root, "matlab-agentic-toolkit-main", "README.md")}  # MATLAB Toolkit 설치 시
+
+# 반입 후 무결성 예시
+${meta[state.os].hash}`;
+      id("installerCode").textContent = `matlab.addons.toolbox.installToolbox("${installer}")`;
+      id("installCode").textContent = `setupAgenticToolkit("install", Toolkit=["matlab","simulink"], Offline=true, ...
+    MCPServerLocation="${binary}", ...
+    MCPToolboxLocation="${toolbox}", ...
+    MATLABAgenticToolkitLocation="${matRepo}", ...
+    SimulinkAgenticToolkitLocation="${simRepo}", ...
+    Prompt=false)
+
+% Simulink만 설치하는 경우 Toolkit="simulink"로 변경하고
+% MATLABAgenticToolkitLocation 인자를 제거합니다.`;
+      id("verifyCode").textContent = `setupAgenticToolkit("status")
+
+addpath(fullfile(${meta[state.os].home}, ".matlab", "agentic-toolkits", "matlab"))
+addpath(fullfile(${meta[state.os].home}, ".matlab", "agentic-toolkits", "simulink"))
+if exist("stak_initialize", "file") == 2
+    stak_initialize
+end
+if exist("satk_initialize", "file") == 2
+    satk_initialize
+end
+validate_installation
+
+openExample('simulink_general/sldemo_househeatExample')`;
+      id("promptCode").textContent = `현재 열린 Simulink 모델의 구조를 설명해줘.
+
+반드시 포함할 항목:
+- 모델 이름과 최상위 subsystem
+- 주요 signal flow
+- 발견한 diagnostics 또는 연결 문제
+- 사용한 MCP tool 이름`;
+      id("rooMcpCode").textContent = `{
+  "mcpServers": {
+    "matlab": {
+      "command": "C:/Users/<user>/.matlab/agentic-toolkits/bin/matlab-mcp-server.exe",
+      "args": [
+        "--matlab-session-mode=existing",
+        "--extension-file=C:/Users/<user>/.matlab/agentic-toolkits/simulink/tools/tools.json"
+      ]
+    }
+  }
+}`;
+      restore();
+      progress();
+    }
+    function restore() {
+      document.querySelectorAll("[data-check]").forEach(c => c.checked = Boolean(state.checks[c.dataset.check]));
+      document.querySelectorAll("[data-val]").forEach(row => {
+        const v = state.vals[row.dataset.val] || "none";
+        row.querySelectorAll("[data-status]").forEach(b => b.classList.toggle("on", b.dataset.status === v));
+      });
+    }
+    function progress() {
+      const checks = [...document.querySelectorAll("[data-check]")];
+      const vals = [...document.querySelectorAll("[data-val]")];
+      const done = checks.filter(c => c.checked).length + vals.filter(v => state.vals[v.dataset.val] === "pass").length;
+      const total = checks.length + vals.length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      id("pct").textContent = `${pct}%`;
+      id("ring").style.setProperty("--p", `${pct * 3.6}deg`);
+    }
+    async function copy(text) {
+      try { await navigator.clipboard.writeText(text); }
+      catch {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+      }
+      const t = id("toast");
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 1300);
+    }
+    function report() {
+      const checks = [...document.querySelectorAll("[data-check]")].map(c => {
+        const text = c.closest("label").innerText.replace(/\s+/g, " ").trim();
+        return `- [${c.checked ? "x" : " "}] ${text}`;
+      }).join("\n");
+      const vals = [...document.querySelectorAll("[data-val]")].map(row => {
+        const text = row.querySelector("strong").innerText.replace(/\s+/g, " ").trim();
+        return `- ${text}: ${state.vals[row.dataset.val] || "none"}`;
+      }).join("\n");
+      return `MATLAB/Simulink Agentic Toolkit 폐쇄망 설치 검증 리포트
+작성 시각: ${new Date().toLocaleString()}
+작업자/시스템: ${state.operator || "(미입력)"}
+대상 OS: ${meta[state.os].label}
+에이전트: ${id("agent").selectedOptions[0].textContent}
+반입 루트: ${state.root}
+특이사항: ${state.memo || "(없음)"}
+
+[체크리스트]
+${checks}
+
+[검증 결과]
+${vals}
+
+[후속 조치]
+- 실패 항목은 문제 해결 섹션의 동일 키워드로 원인을 좁힙니다.
+- 에이전트 재시작 후 Simulink 스킬과 MCP tool call을 다시 확인합니다.
+- 다운로드 App 로그, Installer App 로그, 반입 자산 SHA-256 해시를 함께 보관합니다.`;
+    }
+
+    document.querySelectorAll("#osChoices button").forEach(b => b.addEventListener("click", () => {
+      state.os = b.dataset.os;
+      state.root = meta[state.os].root;
+      save();
+      render();
+    }));
+    id("agent").addEventListener("change", () => { state.agent = "roo"; save(); render(); });
+    id("root").addEventListener("input", e => { state.root = e.target.value.trim() || meta[state.os].root; save(); render(); });
+    id("operator").addEventListener("input", e => { state.operator = e.target.value; save(); });
+    id("memo").addEventListener("input", e => { state.memo = e.target.value; save(); });
+    document.addEventListener("change", e => {
+      if (!e.target.matches("[data-check]")) return;
+      state.checks[e.target.dataset.check] = e.target.checked;
+      save();
+    });
+    document.addEventListener("click", e => {
+      const c = e.target.closest("[data-copy]");
+      if (c) { copy(id(c.dataset.copy).textContent); return; }
+      const s = e.target.closest("[data-status]");
+      if (s) {
+        const row = s.closest("[data-val]");
+        state.vals[row.dataset.val] = s.dataset.status;
+        save();
+        restore();
+      }
+    });
+    function makeReport() { id("reportText").value = report(); location.hash = "#report"; }
+    id("makeReport").addEventListener("click", makeReport);
+    id("reportTop").addEventListener("click", makeReport);
+    id("copyReport").addEventListener("click", () => {
+      const text = id("reportText").value || report();
+      id("reportText").value = text;
+      copy(text);
+    });
+    id("clearReport").addEventListener("click", () => id("reportText").value = "");
+    id("reset").addEventListener("click", () => {
+      if (!confirm("체크리스트와 검증 상태를 초기화할까요?")) return;
+      state.checks = {};
+      state.vals = {};
+      save();
+      render();
+    });
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        document.querySelectorAll("nav a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === `#${entry.target.id}`));
+      });
+    }, { rootMargin: "-20% 0px -65% 0px", threshold: 0 });
+    document.querySelectorAll("section[id]").forEach(s => obs.observe(s));
+    render();
+  </script>
+</body>
+</html>
